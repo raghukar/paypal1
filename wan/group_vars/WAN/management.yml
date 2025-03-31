@@ -72,7 +72,7 @@ local_users:
   - name: admin
     role: network-admin
     privilege: 15
-    sha512_password: "$6$lrGpUOGEPKpyZ65d$E3j3HCAL.c0yjem7KGHqztblJWmNUHG1xNmBnICJAGNeg026CY3Glb4mve/ZGk2CQPLZIKZsRgKnL/SwxmplZ."
+    sha512_password: "$6$IvaiayzZAEGOqKo3$01AjH3AmL8RNPP4WtvjwRtScsOL8uyu8szVxP65StZu4MOyQvat1RiibC48fY6Ng2fcEMau0Ff8WjkWsph3Kx/"
 
   - name: avd
     privilege: 15
