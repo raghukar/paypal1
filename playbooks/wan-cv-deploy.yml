@@ -1,0 +1,19 @@
+- name: Deploy WAN Configuration with CloudVision
+  hosts: WAN
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Provision CVP with AVD configuration
+      run_once: true
+      delegate_to: localhost
+      # https://avd.arista.com/4.10/docs/plugins/Modules_and_action_plugins/cv_workflow.html
+      # https://avd.arista.com/4.10/roles/cv_deploy/index.html
+      ansible.builtin.import_role:
+        name: arista.avd.cv_deploy
+      vars:
+        cv_servers: [ "www.cv-staging.corp.arista.io" ]
+        cv_token: "{{ lookup('file', '../avdtoken') }}"
+        cv_run_change_control: false
+        deploy_to_cv_accept_preview: true
+        device_search_key: hostname
+        cv_verify_certs: false

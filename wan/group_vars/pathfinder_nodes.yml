@@ -1,0 +1,34 @@
+---
+# WAN Pathfinder Nodes
+
+type: wan_rr
+
+# data_plane_cpu_allocation_max: 1
+
+wan_rr: # dynamic_key: node_type
+  defaults:
+    data_plane_cpu_allocation_max: 1
+    loopback_ipv4_pool: 10.254.99.0/30
+    vtep_loopback_ipv4_pool: 192.168.99.0/30
+    filter:
+      always_include_vrfs_in_tenants: [srtcSmall]
+  nodes:
+    - name: paypal1-pf1
+      cv_pathfinder_site: Site-PF1
+      id: 1
+      mgmt_ip: 192.168.1.5/24
+      l3_interfaces:
+        - name: Ethernet1
+          ip_address: 172.16.99.1/28
+          wan_carrier: "AT & T"
+          wan_circuit_id: ATTI-CKT-PF-1-172.16.99.1
+    - name: paypal1-pf2
+      cv_pathfinder_site: Site-PF2
+      id: 2
+      mgmt_ip: 192.168.1.6/24
+      l3_interfaces:
+        - name: Ethernet1
+          ip_address: 172.16.99.17/28
+          wan_carrier: "AT & T"
+          wan_circuit_id: ATTI-CKT-PF-2-172.16.99.17
+

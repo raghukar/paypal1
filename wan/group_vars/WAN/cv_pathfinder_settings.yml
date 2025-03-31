@@ -1,0 +1,199 @@
+---
+# WAN CV Pathfinder Settings
+
+fabric_name: WAN
+use_anta: true
+deploy_to_cv_accept_preview: true
+deploy_to_cv_inventory_host: cloudvision
+bgp_update_wait_install: false
+
+wan_stun_dtls_disable: true
+custom_structured_configuration_metadata: null
+
+custom_structured_configuration_prefix:
+  - custom_structured_configuration_
+  - group_custom_structured_
+  - host_custom_structured_
+
+wan_mode: cv-pathfinder
+
+#custom_structured_configuration_metadata: null
+
+bgp_as: 65199
+
+cv_pathfinder_global_sites:
+  - name: Site-PF1
+    description: Site-PF1
+    location: "Washington Dulles International Airport (IAD), 1 Saarinen Cir, Sterling, Virginia 20166, United States"
+  - name: Site-PF2
+    description: Site-PF2
+    location: "Boston Logan International Airport, East Boston, United States"
+
+cv_pathfinder_regions:
+  - name: paypal1_region1
+    id: 1
+    sites:
+      - name: Site1
+        id: 110
+        location: "Buffalo Niagara International Airport, 4200 Genesee St, Buffalo, NY, United States"
+      - name: Site2
+        id: 100
+        location: "John F. Kennedy International Airport, The Port Authority of New York and New Jersey, Building 14, Jamaica, NY, United States"
+
+bgp_peer_groups:
+  wan_overlay_peers:
+    password: "htm4AZe9mIQOO1uiMuGgYQ=="
+    listen_range_prefixes:
+      - 192.168.110.0/30
+      - 192.168.100.0/30
+
+wan_route_servers:
+  - hostname: paypal1-pf1
+  - hostname: paypal1-pf2
+
+wan_ipsec_profiles:
+  control_plane:
+    shared_key: 0110100A480E0A0E231D1E
+  data_plane:
+    shared_key: 0110100A480E0A0E231D1E
+
+wan_path_groups:
+  - name: internet
+    id: 101
+  # - name: mpls
+  #   id: 102
+
+wan_carriers:
+  # - name: "mpls"
+  #   path_group: mpls
+  #   trusted: True
+  - name: "AT & T"
+    path_group: internet
+    trusted: True
+
+wan_virtual_topologies:
+  vrfs:
+    - name: default
+      policy: DEFAULT-AVT-POLICY
+      wan_vni: 101
+    - name: prod
+      policy: PROD-AVT-POLICY
+      wan_vni: 1
+
+  policies:
+    - name: DEFAULT-AVT-POLICY
+      default_virtual_topology:
+        path_groups:
+          - names: [internet]
+            preference: preferred
+          # - names: [mpls]
+          #   preference: preferred
+    - name: PROD-AVT-POLICY
+      application_virtual_topologies:
+        - application_profile: IT-APP
+          id: 6
+          traffic_class: 3
+          dscp: 26
+          path_groups:
+            - names: [internet]
+              preference: preferred
+            # - names: [mpls]
+            #   preference: preferred
+
+        # - application_profile: Critical-APP
+        #   id: 5
+        #   traffic_class: 2
+        #   dscp: 18
+        #   path_groups:
+        #     - names: [internet]
+        #       preference: alternate
+            # - names: [mpls]
+            #   preference: preferred
+          # constraints:
+          #   latency: 100
+        - application_profile: Voice
+          id: 4
+          traffic_class: 5
+          dscp: 46
+          path_groups:
+            - names: [internet]
+              preference: preferred
+            # - names: [mpls]
+            #   preference: preferred
+      default_virtual_topology:
+        path_groups:
+          - names: [internet]
+            preference: preferred
+          # - names: [mpls]
+          #   preference: preferred
+
+# custom_structured_configuration_router_path_selection:
+#   load_balance_policies:
+#     - name: LB-PROD-AVT-POLICY-Critical-APP
+#       lowest_hop_count: True
+#       path_groups:
+#         - name: internet
+#           priority: 1
+
+application_classification:
+  field_sets:
+    l4_ports:
+      - name: IT-AppDstPorts
+        port_values:
+          -  '5003'
+      - name: Critical-AppDstPorts
+        port_values:
+          -  '5001'
+    ipv4_prefixes:
+      - name: IT-AppDstPrefixes
+        prefix_values:
+          - 172.29.3.2/32
+      - name: Critical-AppDstPrefixes
+        prefix_values:
+          - 172.29.3.2/32
+      - name: VoiceHostsDstPrefixes
+        prefix_values:
+          - 172.29.2.2/32
+          - 172.29.5.2/32
+      - name: VoiceHostsSrcPrefixes
+        prefix_values:
+          - 172.29.2.2/32
+          - 172.29.5.2/32
+  applications:
+    ipv4_applications:
+      - name: IT-App
+        dest_prefix_set_name: IT-AppDstPrefixes
+        protocols:
+          - 'udp'
+        udp_dest_port_set_name: IT-AppDstPorts
+      - name: Critical-App
+        # dest_prefix_set_name: Critical-AppDstPrefixes
+        protocols:
+          - 'udp'
+        udp_dest_port_set_name: Critical-AppDstPorts
+      - name: Voice
+        dest_prefix_set_name: VoiceHostsDstPrefixes
+        src_prefix_set_name: VoiceHostsSrcPrefixes
+
+  application_profiles:
+    - name: IT-APP
+      applications:
+        - name: IT-App
+    - name: Critical-APP
+      applications:
+        - name: Critical-App
+    - name: Voice
+      applications:
+        - name: Voice
+
+custom_structured_configuration_eos_cli: |-
+  username cwomble secret *
+  username cwomble ssh-key ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDOZFQIhHNghkuJryYiNyFUbkVPyGH2tU1gFuoJ/wDDg420VY9tb1OQn7k+XoDaVWWoEoOek07sJzns0Yy7WYUhgHP3T8Q3qW2DRjRDCUgUXnt9iW9N/axh4U4OP71UbWJNw3D6b5JE4EWt56okFcR6eSAyyKoYZvUAiCX1oUGVbRDz0cTNTbbnYHXp8DFBM/3fLNrO7Ntif+1ZtY8IQoZoDaOZpQLqTt40QGBAJgyXy0xP3urSaSJP2alSZP0g2IY9WebHaJAKnzP+SCuU4pMpcWYE3EoevYB6RLy12WylXq7Ht8sy2cjB9HH19BM4lNvRJ7ArjsL8enBP4OdqdyCH/SfLy6YrQ2EFidNpxnGBNVxIA7lkK82jLGFiqKJJNapZW4nRljT+KVMFEh/NTDP61wYmUPCR331+e3TiKsapwcIN/Q1+20WBVf11RseChjLqZzu54y9PDw/MA8ra8mPbuenhNJ6Xw8nkZbeUr+o/jZHwTP0sTLFyv4uJKvOACBc=
+  username ec2-user shell /bin/bash nopassword
+  username ec2-user ssh-key ssh-rsa ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQD0NRhYoVfQZwawep5MxXnhjHw+LQJEwvgukdY6MjXlx59Na18F1hRNLKaIBTBEKKIbKELFRRdZlynz9qmo7RP+68Wjd1RVPNk5rBoK1xf4GrbmPrLz7TkWYnfhOLG1wkX2h6KcAn6vtiqNrzltpsSYM94ja9kB65SFDc6Pz/3klMSuUnupo37fDPmV/L7fgTIxv79tOW6sf/1LU+cSWlkIlL2plu/YohAYydqFDTV7tEp9BCdV72BEhYRdzdMP3ZCzb68uMfVxNe4sOtQcu3t2uc/OwYTfDVDKpRkbUot5Td0wuLNYn7Jezssmsd8ImDv+TZE90NeW/r5EvPhpQ4KDDFwyOzKXuaUUlV98Xe8e6qnXSJSFpXkS4M/RPjYvc91uJxjAbwmouMtqn11ox5Jvoc9G+rTtlRezND949B6bEo74woVDL6RzlXt8/o/8KAHEiligrZZikOhCBD7kp9AE2DKecgFqGEF7lV2Vgipan1Dnceb2gjcZ0vIeWO8xzIc= nonroot@buildkitsandbox
+  username gcp-user secret *
+  username gcp-user ssh-key ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDGPEoZ2l67eEEwrlGfBAHPMx44IoqhyfjqXj2Ka4PxLuHgi1mv131VuCRlyWjOjddccyFUilfR1Bprdmd1Tj7o4Q11YQ138LOqFWJT3h0pxgHFdIHo70y4rI8aL15ixukZYa+g9KX8qTN+ZpFfea2d3CEFzMp+Y3xVPiWwLKzalq1JwT5J4MK2VHCbcnpN3zRON+gca/iZH9upA0WaXWJXNBnYXrgXFVGCJFk6Yl1ZXIGnEcKGe44c77zWgF4C66VhltsW999XD5vF31f6TTs25qxGScsiKMDg2uM1AzVg5KfxxhVy5HKd23YJJMytvUXL9h5Wq1HEEluSCcFtNI81
+  username mircea secret *
+  username mircea ssh-key ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDw26o1dbfin+wgiYhiHybYebcYlS1EpucVdzfZASTkaMnCiaGy61mLtCaiZA82MEMNbkHLr9WgO2f9pHN2fiIiJc2gmlZPAUvSDzOHQapGuWzoPbeoKTaPyEzkDD5IzerV8wgMooaJOIWU9dWRjVPpUyj2GJ3JirC3HiLRnhkHFh3F+vUkEL81lMzJ/0HdnW3WrIjU6JnuOnpjiJ+np1OEPSbBdANT89tzaEm87QUioPQF7hHknKFUYK2Zqh5SXR6vQaLEcIhRqlAvZyjc95vDtYFWzqrdrHTdznyr8Hs/R2OeLmPGArGm6V8sGC9Q1bGfbhwjxvoWH9igUO6d82HKL2h8PJ1gXJU4XCb6Dkft7y0M4CDx6tIOo9jDxwFRtim9oC0uwxsRoXL4xCDYGH+jO4RAQSVxP6MQsJBEOvXez6whUev1lR91CiXmtUwQfzfmol03U8xMsBkdZ+Y4B7AkBUIpi/+8aEbMwRACyDZJB0+FzkYuWIYpiqoQ4pwUVw8=
+  username service shell /bin/bash secret sha512 $6$dCspVgQvOaoW3uL8$mj41FoMt981jOgBeNKNVW74q5gt.QExNr0gv7IbwAETzSps5nXUQyAzO96Ii787aJN4DX.zoRQYArzsnwztvl/
+

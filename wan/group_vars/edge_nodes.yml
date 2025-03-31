@@ -1,0 +1,36 @@
+---
+
+# Edge nodes configuration
+
+type: wan_router
+
+wan_router:  # dynamic_key: node_type
+  defaults:
+    id: 1
+    loopback_ipv4_offset: -1
+    cv_pathfinder_region: paypal1_region1
+    # cv_pathfinder_transit_mode: region
+    filter:
+      always_include_vrfs_in_tenants: [srtcSmall]
+  nodes:
+    - name: paypal1-Site1-1
+      cv_pathfinder_site: Site1
+      mgmt_ip: 192.168.1.9/24
+      loopback_ipv4_pool: 10.254.100.1/32
+      vtep_loopback_ipv4_pool: 192.168.100.1/32
+      l3_interfaces:
+        - name: Ethernet1
+          ip_address: 172.16.100.1/28
+          wan_carrier: "AT & T"
+          wan_circuit_id: ATTI-CKT-172.16.100.1
+    - name: paypal1-Site2-1
+      cv_pathfinder_site: Site2
+      mgmt_ip: 192.168.1.10/24
+      loopback_ipv4_pool: 10.254.110.1/32
+      vtep_loopback_ipv4_pool: 192.168.110.1/32
+      l3_interfaces:
+        - name: Ethernet1
+          ip_address: 172.16.110.1/24
+          wan_carrier: "AT & T"
+          wan_circuit_id: ATTI-CKT-110-1-172.16.110.1
+

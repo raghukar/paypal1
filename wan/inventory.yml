@@ -1,0 +1,19 @@
+---
+all:
+  hosts:
+    cloudvision:
+      ansible_host: "www.cv-staging.corp.arista.io"
+      ansible_password: "{{ lookup('file', '../avdtoken') }}"
+  children:
+    WAN:
+      children:
+        pathfinder_nodes:
+          hosts:
+            paypal1-pf1:
+            paypal1-pf2:
+        edge_nodes:
+          hosts:
+            paypal1-Site1-1:
+            paypal1-Site2-1:
+
+

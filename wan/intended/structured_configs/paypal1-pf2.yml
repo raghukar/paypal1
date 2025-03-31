@@ -1,0 +1,509 @@
+hostname: paypal1-pf2
+is_deployed: true
+router_bgp:
+  as: '65199'
+  router_id: 10.254.99.2
+  bgp:
+    default:
+      ipv4_unicast: false
+  maximum_paths:
+    paths: 16
+  redistribute_routes:
+  - source_protocol: connected
+    route_map: RM-CONN-2-BGP
+  bgp_cluster_id: 10.254.99.2
+  listen_ranges:
+  - prefix: 192.168.110.0/30
+    peer_group: WAN-OVERLAY-PEERS
+    remote_as: '65199'
+  - prefix: 192.168.100.0/30
+    peer_group: WAN-OVERLAY-PEERS
+    remote_as: '65199'
+  peer_groups:
+  - name: WAN-OVERLAY-PEERS
+    type: wan
+    update_source: Dps1
+    bfd: true
+    password: htm4AZe9mIQOO1uiMuGgYQ==
+    send_community: all
+    maximum_routes: 0
+    remote_as: '65199'
+    ttl_maximum_hops: 1
+    route_reflector_client: true
+    bfd_timers:
+      interval: 1000
+      min_rx: 1000
+      multiplier: 10
+  - name: WAN-RR-OVERLAY-PEERS
+    type: wan
+    update_source: Dps1
+    bfd: true
+    send_community: all
+    maximum_routes: 0
+    remote_as: '65199'
+    ttl_maximum_hops: 1
+    bfd_timers:
+      interval: 1000
+      min_rx: 1000
+      multiplier: 10
+    route_reflector_client: true
+  address_family_evpn:
+    peer_groups:
+    - name: WAN-OVERLAY-PEERS
+      activate: true
+    - name: WAN-RR-OVERLAY-PEERS
+      activate: true
+    next_hop:
+      resolution_disabled: true
+  address_family_ipv4:
+    peer_groups:
+    - name: WAN-OVERLAY-PEERS
+      activate: false
+    - name: WAN-RR-OVERLAY-PEERS
+      activate: false
+  address_family_ipv4_sr_te:
+    peer_groups:
+    - name: WAN-OVERLAY-PEERS
+      activate: true
+    - name: WAN-RR-OVERLAY-PEERS
+      activate: true
+  address_family_link_state:
+    peer_groups:
+    - name: WAN-OVERLAY-PEERS
+      activate: true
+      missing_policy:
+        direction_out_action: deny
+    - name: WAN-RR-OVERLAY-PEERS
+      activate: true
+    path_selection:
+      roles:
+        consumer: true
+        propagator: true
+  address_family_path_selection:
+    peer_groups:
+    - name: WAN-OVERLAY-PEERS
+      activate: true
+    - name: WAN-RR-OVERLAY-PEERS
+      activate: true
+    bgp:
+      additional_paths:
+        receive: true
+        send:
+          any: true
+  neighbors:
+  - ip_address: 192.168.99.1
+    peer_group: WAN-RR-OVERLAY-PEERS
+    peer: paypal1-pf1
+    description: paypal1-pf1
+  vrfs:
+  - name: default
+    rd: 192.168.99.2:101
+    route_targets:
+      import:
+      - address_family: evpn
+        route_targets:
+        - 65199:101
+      export:
+      - address_family: evpn
+        route_targets:
+        - 65199:101
+        - route-map RM-EVPN-EXPORT-VRF-DEFAULT
+  - name: prod
+    router_id: 10.254.99.2
+    rd: 192.168.99.2:1
+    route_targets:
+      import:
+      - address_family: evpn
+        route_targets:
+        - '65199:1'
+      export:
+      - address_family: evpn
+        route_targets:
+        - '65199:1'
+    redistribute_routes:
+    - source_protocol: connected
+service_routing_protocols_model: multi-agent
+ip_routing: true
+daemon_terminattr:
+  cvaddrs:
+  - apiserver.cv-staging.corp.arista.io:443
+  cvauth:
+    method: token-secure
+    token_file: /tmp/cv-onboarding-token
+  cvvrf: default
+  smashexcludes: ale,flexCounter,hardware,kni,pulse,strata
+  ingestexclude: /Sysdb/cell/1/agent,/Sysdb/cell/2/agent
+  disable_aaa: true
+transceiver_qsfp_default_mode_4x10: false
+spanning_tree:
+  mode: none
+local_users:
+- name: admin
+  role: network-admin
+  privilege: 15
+  sha512_password: $6$lrGpUOGEPKpyZ65d$E3j3HCAL.c0yjem7KGHqztblJWmNUHG1xNmBnICJAGNeg026CY3Glb4mve/ZGk2CQPLZIKZsRgKnL/SwxmplZ.
+- name: arastra
+  privilege: 15
+  role: network-admin
+  sha512_password: $6$.iauIIDlN9IE5HD3$TX37BmbtLLWIyLIz41966D.gVxYawWdztQ6nCoKDrUFktfATe8jTH.e0R1U3EiBcYal8igbiGYSDX0DK1jZv70
+- name: avd
+  privilege: 15
+  role: network-admin
+  sha512_password: $6$.iauIIDlN9IE5HD3$TX37BmbtLLWIyLIz41966D.gVxYawWdztQ6nCoKDrUFktfATe8jTH.e0R1U3EiBcYal8igbiGYSDX0DK1jZv70
+- name: cvpadmin
+  privilege: 15
+  role: network-admin
+  sha512_password: $6$.iauIIDlN9IE5HD3$TX37BmbtLLWIyLIz41966D.gVxYawWdztQ6nCoKDrUFktfATe8jTH.e0R1U3EiBcYal8igbiGYSDX0DK1jZv70
+vrfs:
+- name: default
+  ip_routing: false
+- name: prod
+  tenant: srtcSmall
+  ip_routing: true
+management_interfaces:
+- name: Management1
+  description: oob_management
+  shutdown: false
+  vrf: default
+  ip_address: 192.168.1.6/24
+  gateway: null
+  type: oob
+platform:
+  sfe:
+    data_plane_cpu_allocation_max: 1
+management_api_http:
+  enable_vrfs:
+  - name: default
+  enable_https: true
+ntp:
+  servers:
+  - name: 0.us.pool.ntp.org
+    vrf: default
+    preferred: true
+ethernet_interfaces:
+- name: Ethernet1
+  peer_type: l3_interface
+  ip_address: 172.16.99.17/28
+  shutdown: false
+  type: routed
+  description: AT & T_ATTI-CKT-PF-2-172.16.99.17
+  flow_tracker:
+    hardware: FLOW-TRACKER
+- name: Ethernet2
+  flow_tracker:
+    hardware: FLOW-TRACKER
+loopback_interfaces:
+- name: Loopback0
+  description: Router_ID
+  shutdown: false
+  ip_address: 10.254.99.2/32
+prefix_lists:
+- name: PL-LOOPBACKS-EVPN-OVERLAY
+  sequence_numbers:
+  - sequence: 10
+    action: permit 10.254.99.0/30 eq 32
+route_maps:
+- name: RM-CONN-2-BGP
+  sequence_numbers:
+  - sequence: 10
+    type: permit
+    match:
+    - ip address prefix-list PL-LOOPBACKS-EVPN-OVERLAY
+    set:
+    - extcommunity soo 10.254.99.2:0 additive
+- name: RM-EVPN-EXPORT-VRF-DEFAULT
+  sequence_numbers:
+  - sequence: 10
+    type: permit
+    match:
+    - extcommunity ECL-EVPN-SOO
+agents:
+- name: KernelFib
+  environment_variables:
+  - name: KERNELFIB_PROGRAM_ALL_ECMP
+    value: '''true'''
+ip_extcommunity_lists:
+- name: ECL-EVPN-SOO
+  entries:
+  - type: permit
+    extcommunities: soo 10.254.99.2:0
+ip_security:
+  ike_policies:
+  - name: CP-IKE-POLICY
+    local_id: 192.168.99.2
+  sa_policies:
+  - name: CP-SA-POLICY
+    esp:
+      encryption: aes256gcm128
+    pfs_dh_group: 14
+  profiles:
+  - name: CP-PROFILE
+    ike_policy: CP-IKE-POLICY
+    sa_policy: CP-SA-POLICY
+    connection: start
+    shared_key: 0110100A480E0A0E231D1E
+    dpd:
+      interval: 10
+      time: 50
+      action: clear
+    mode: transport
+router_adaptive_virtual_topology:
+  topology_role: pathfinder
+  profiles:
+  - name: DEFAULT-AVT-POLICY-CONTROL-PLANE
+    load_balance_policy: LB-DEFAULT-AVT-POLICY-CONTROL-PLANE
+  - name: DEFAULT-AVT-POLICY-DEFAULT
+    load_balance_policy: LB-DEFAULT-AVT-POLICY-DEFAULT
+  - name: PROD-AVT-POLICY-IT-APP
+    load_balance_policy: LB-PROD-AVT-POLICY-IT-APP
+  - name: PROD-AVT-POLICY-Voice
+    load_balance_policy: LB-PROD-AVT-POLICY-Voice
+  - name: PROD-AVT-POLICY-DEFAULT
+    load_balance_policy: LB-PROD-AVT-POLICY-DEFAULT
+  vrfs:
+  - name: default
+    policy: DEFAULT-AVT-POLICY-WITH-CP
+    profiles:
+    - name: DEFAULT-AVT-POLICY-CONTROL-PLANE
+      id: 254
+    - name: DEFAULT-AVT-POLICY-DEFAULT
+      id: 1
+  - name: prod
+    policy: PROD-AVT-POLICY
+    profiles:
+    - name: PROD-AVT-POLICY-IT-APP
+      id: 6
+    - name: PROD-AVT-POLICY-Voice
+      id: 4
+    - name: PROD-AVT-POLICY-DEFAULT
+      id: 1
+  policies:
+  - name: DEFAULT-AVT-POLICY-WITH-CP
+    matches:
+    - application_profile: APP-PROFILE-CONTROL-PLANE
+      avt_profile: DEFAULT-AVT-POLICY-CONTROL-PLANE
+    - application_profile: default
+      avt_profile: DEFAULT-AVT-POLICY-DEFAULT
+  - name: PROD-AVT-POLICY
+    matches:
+    - application_profile: IT-APP
+      avt_profile: PROD-AVT-POLICY-IT-APP
+      traffic_class: 3
+      dscp: 26
+    - application_profile: Voice
+      avt_profile: PROD-AVT-POLICY-Voice
+      traffic_class: 5
+      dscp: 46
+    - application_profile: default
+      avt_profile: PROD-AVT-POLICY-DEFAULT
+router_bfd:
+  multihop:
+    interval: 300
+    min_rx: 300
+    multiplier: 3
+router_path_selection:
+  tcp_mss_ceiling:
+    ipv4_segment_size: auto
+  path_groups:
+  - name: internet
+    id: 101
+    local_interfaces:
+    - name: Ethernet1
+    static_peers:
+    - router_ip: 192.168.99.1
+      name: paypal1-pf1
+      ipv4_addresses:
+      - 172.16.99.1
+    ipsec_profile: CP-PROFILE
+  - name: LAN_HA
+    id: 65535
+    flow_assignment: lan
+  peer_dynamic_source: stun
+  load_balance_policies:
+  - name: LB-DEFAULT-AVT-POLICY-CONTROL-PLANE
+    path_groups:
+    - name: internet
+    - name: LAN_HA
+  - name: LB-DEFAULT-AVT-POLICY-DEFAULT
+    path_groups:
+    - name: internet
+    - name: LAN_HA
+  - name: LB-PROD-AVT-POLICY-IT-APP
+    path_groups:
+    - name: internet
+    - name: LAN_HA
+  - name: LB-PROD-AVT-POLICY-Voice
+    path_groups:
+    - name: internet
+    - name: LAN_HA
+  - name: LB-PROD-AVT-POLICY-DEFAULT
+    path_groups:
+    - name: internet
+    - name: LAN_HA
+router_traffic_engineering:
+  enabled: true
+stun:
+  server:
+    local_interfaces:
+    - Ethernet1
+application_traffic_recognition:
+  application_profiles:
+  - name: IT-APP
+    applications:
+    - name: IT-App
+  - name: Voice
+    applications:
+    - name: Voice
+  - name: APP-PROFILE-CONTROL-PLANE
+    applications:
+    - name: APP-CONTROL-PLANE
+  applications:
+    ipv4_applications:
+    - name: IT-App
+      dest_prefix_set_name: IT-AppDstPrefixes
+      protocols:
+      - udp
+      udp_dest_port_set_name: IT-AppDstPorts
+    - name: Voice
+      dest_prefix_set_name: VoiceHostsDstPrefixes
+      src_prefix_set_name: VoiceHostsSrcPrefixes
+    - name: APP-CONTROL-PLANE
+      src_prefix_set_name: PFX-LOCAL-VTEP-IP
+  field_sets:
+    l4_ports:
+    - name: IT-AppDstPorts
+      port_values:
+      - '5003'
+    ipv4_prefixes:
+    - name: IT-AppDstPrefixes
+      prefix_values:
+      - 172.29.3.2/32
+    - name: VoiceHostsSrcPrefixes
+      prefix_values:
+      - 172.29.2.2/32
+      - 172.29.5.2/32
+    - name: VoiceHostsDstPrefixes
+      prefix_values:
+      - 172.29.2.2/32
+      - 172.29.5.2/32
+    - name: PFX-LOCAL-VTEP-IP
+      prefix_values:
+      - 192.168.99.2/32
+dps_interfaces:
+- name: Dps1
+  description: DPS Interface
+  mtu: 9214
+  ip_address: 192.168.99.2/32
+  flow_tracker:
+    hardware: FLOW-TRACKER
+vxlan_interface:
+  Vxlan1:
+    description: paypal1-pf2_VTEP
+    vxlan:
+      udp_port: 4789
+      source_interface: Dps1
+      vrfs:
+      - name: default
+        vni: 101
+      - name: prod
+        vni: 1
+metadata: null
+flow_tracking:
+  hardware:
+    trackers:
+    - name: FLOW-TRACKER
+      record_export:
+        on_inactive_timeout: 70000
+        on_interval: 5000
+      exporters:
+      - name: CV-TELEMETRY
+        collector:
+          host: 127.0.0.1
+        local_interface: Loopback0
+        template_interval: 30000
+    shutdown: false
+eos_cli: 'username cwomble secret *
+
+  username cwomble ssh-key ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDOZFQIhHNghkuJryYiNyFUbkVPyGH2tU1gFuoJ/wDDg420VY9tb1OQn7k+XoDaVWWoEoOek07sJzns0Yy7WYUhgHP3T8Q3qW2DRjRDCUgUXnt9iW9N/axh4U4OP71UbWJNw3D6b5JE4EWt56okFcR6eSAyyKoYZvUAiCX1oUGVbRDz0cTNTbbnYHXp8DFBM/3fLNrO7Ntif+1ZtY8IQoZoDaOZpQLqTt40QGBAJgyXy0xP3urSaSJP2alSZP0g2IY9WebHaJAKnzP+SCuU4pMpcWYE3EoevYB6RLy12WylXq7Ht8sy2cjB9HH19BM4lNvRJ7ArjsL8enBP4OdqdyCH/SfLy6YrQ2EFidNpxnGBNVxIA7lkK82jLGFiqKJJNapZW4nRljT+KVMFEh/NTDP61wYmUPCR331+e3TiKsapwcIN/Q1+20WBVf11RseChjLqZzu54y9PDw/MA8ra8mPbuenhNJ6Xw8nkZbeUr+o/jZHwTP0sTLFyv4uJKvOACBc=
+
+  username ec2-user shell /bin/bash nopassword
+
+  username ec2-user ssh-key ssh-rsa ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQD0NRhYoVfQZwawep5MxXnhjHw+LQJEwvgukdY6MjXlx59Na18F1hRNLKaIBTBEKKIbKELFRRdZlynz9qmo7RP+68Wjd1RVPNk5rBoK1xf4GrbmPrLz7TkWYnfhOLG1wkX2h6KcAn6vtiqNrzltpsSYM94ja9kB65SFDc6Pz/3klMSuUnupo37fDPmV/L7fgTIxv79tOW6sf/1LU+cSWlkIlL2plu/YohAYydqFDTV7tEp9BCdV72BEhYRdzdMP3ZCzb68uMfVxNe4sOtQcu3t2uc/OwYTfDVDKpRkbUot5Td0wuLNYn7Jezssmsd8ImDv+TZE90NeW/r5EvPhpQ4KDDFwyOzKXuaUUlV98Xe8e6qnXSJSFpXkS4M/RPjYvc91uJxjAbwmouMtqn11ox5Jvoc9G+rTtlRezND949B6bEo74woVDL6RzlXt8/o/8KAHEiligrZZikOhCBD7kp9AE2DKecgFqGEF7lV2Vgipan1Dnceb2gjcZ0vIeWO8xzIc=
+  nonroot@buildkitsandbox
+
+  username gcp-user secret *
+
+  username gcp-user ssh-key ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDGPEoZ2l67eEEwrlGfBAHPMx44IoqhyfjqXj2Ka4PxLuHgi1mv131VuCRlyWjOjddccyFUilfR1Bprdmd1Tj7o4Q11YQ138LOqFWJT3h0pxgHFdIHo70y4rI8aL15ixukZYa+g9KX8qTN+ZpFfea2d3CEFzMp+Y3xVPiWwLKzalq1JwT5J4MK2VHCbcnpN3zRON+gca/iZH9upA0WaXWJXNBnYXrgXFVGCJFk6Yl1ZXIGnEcKGe44c77zWgF4C66VhltsW999XD5vF31f6TTs25qxGScsiKMDg2uM1AzVg5KfxxhVy5HKd23YJJMytvUXL9h5Wq1HEEluSCcFtNI81
+
+  username mircea secret *
+
+  username mircea ssh-key ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDw26o1dbfin+wgiYhiHybYebcYlS1EpucVdzfZASTkaMnCiaGy61mLtCaiZA82MEMNbkHLr9WgO2f9pHN2fiIiJc2gmlZPAUvSDzOHQapGuWzoPbeoKTaPyEzkDD5IzerV8wgMooaJOIWU9dWRjVPpUyj2GJ3JirC3HiLRnhkHFh3F+vUkEL81lMzJ/0HdnW3WrIjU6JnuOnpjiJ+np1OEPSbBdANT89tzaEm87QUioPQF7hHknKFUYK2Zqh5SXR6vQaLEcIhRqlAvZyjc95vDtYFWzqrdrHTdznyr8Hs/R2OeLmPGArGm6V8sGC9Q1bGfbhwjxvoWH9igUO6d82HKL2h8PJ1gXJU4XCb6Dkft7y0M4CDx6tIOo9jDxwFRtim9oC0uwxsRoXL4xCDYGH+jO4RAQSVxP6MQsJBEOvXez6whUev1lR91CiXmtUwQfzfmol03U8xMsBkdZ+Y4B7AkBUIpi/+8aEbMwRACyDZJB0+FzkYuWIYpiqoQ4pwUVw8=
+
+  username service shell /bin/bash secret sha512 $6$dCspVgQvOaoW3uL8$mj41FoMt981jOgBeNKNVW74q5gt.QExNr0gv7IbwAETzSps5nXUQyAzO96Ii787aJN4DX.zoRQYArzsnwztvl/'
+switchport_default:
+  mode: routed
+qos:
+  rewrite_dscp: false
+ip_access_lists:
+- name: sshACL1
+  entries:
+  - sequence: 10
+    action: permit
+    protocol: tcp
+    source: 10.1.210.0/24
+    source_ports_match: eq
+    source_ports:
+    - '22'
+    destination: 10.1.220.0/24
+class_maps:
+  qos:
+  - name: class1
+    ip:
+      access_group: sshACL1
+policy_maps:
+  qos:
+  - name: policy1
+    classes:
+    - name: class1
+      set:
+        dscp: '32'
+aliases: 'alias cc clear counters
+
+  alias senz show interface counter error | nz
+
+  alias shin show interface status
+
+  alias shmc show int | awk ''/^[A-Z]/ { intf = $1 } /, address is/ { print intf, $6 }''
+
+  alias snz show interface counter | nz
+
+  alias spc show port-channel %1 detail all
+
+  alias sqnz show interface counter queue | nz
+
+  alias srnz show interface counter rate | n
+
+  '
+system:
+  l1:
+    unsupported_speed_action: error
+    unsupported_error_correction_action: error
+ip_name_servers:
+- ip_address: 169.254.169.254
+  vrf: default
+- ip_address: 8.8.4.4
+  vrf: default
+  priority: 4
+- ip_address: 8.8.8.8
+  vrf: default
+  priority: 4
+management_ssh:
+  client_alive:
+    interval: 180
+banners:
+  motd: "WAN PM-SE Demo srtcSmall. This setup is read-only access via CLI or CVaaS. Please contact raghukar@ with any questions\n Note:
+    Managed by CVaaS (cv-staging) \n"
+static_routes:
+- vrf: default
+  destination_address_prefix: 0.0.0.0/0
+  gateway: 172.16.99.18

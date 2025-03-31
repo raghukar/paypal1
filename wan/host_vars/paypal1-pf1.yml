@@ -1,0 +1,26 @@
+---
+
+host_custom_structured_static_routes:
+  - vrf: default
+    destination_address_prefix: 0.0.0.0/0
+    gateway: 172.16.99.2
+  # - vrf: default
+  #   destination_address_prefix: 10.240.0.0/16
+  #   gateway: 10.240.99.2
+
+custom_structured_configuration_ethernet_interfaces:
+- name: Ethernet1
+  flow_tracker:
+    hardware: FLOW-TRACKER
+- name: Ethernet2
+  flow_tracker:
+    hardware: FLOW-TRACKER
+
+
+host_custom_structured_router_bgp:
+  router_id: 192.168.99.1
+  vrfs:
+    - name: default
+      router_id: 192.168.99.1
+    - name: prod
+      router_id: 192.168.99.1

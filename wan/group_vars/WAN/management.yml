@@ -1,0 +1,152 @@
+---
+
+# WAN Management Settings
+
+mgmt_interface_vrf: default
+default_mgmt_method: oob
+
+logging:
+  console: "debugging"
+  monitor: "debugging"
+
+aaa_authorization:
+  exec:
+    default: local
+
+custom_structured_configuration_flow_tracking:
+  hardware:
+    trackers:
+    - name: FLOW-TRACKER
+      record_export:
+        on_inactive_timeout: 70000
+        on_interval: 5000
+      exporters:
+      - name: CV-TELEMETRY
+        collector:
+          host: 127.0.0.1
+        local_interface: Loopback0
+        template_interval: 30000
+    shutdown: false
+
+dns_domain: sjc.aristanetworks.com
+
+custom_structured_configuration_switchport_default:
+  mode: "routed"
+
+custom_structured_configuration_agents:
+  - name: KernelFib
+    environment_variables:
+      - name: KERNELFIB_PROGRAM_ALL_ECMP
+        value: "'true'"
+
+custom_structured_configuration_qos:
+  rewrite_dscp: false
+
+custom_structured_configuration_ip_access_lists:
+  - name: sshACL1
+    entries:
+      - sequence: 10
+        action: permit
+        protocol: tcp
+        source: 10.1.210.0/24
+        source_ports_match: eq
+        source_ports:
+          - 22
+        destination: 10.1.220.0/24
+
+custom_structured_configuration_class_maps:
+  qos:
+    - name: class1
+      ip:
+        access_group: sshACL1
+
+custom_structured_configuration_policy_maps:
+  qos:
+    - name: policy1
+      classes:
+        - name: class1
+          set:
+            dscp: 32
+
+local_users:
+  - name: admin
+    role: network-admin
+    privilege: 15
+    sha512_password: "$6$lrGpUOGEPKpyZ65d$E3j3HCAL.c0yjem7KGHqztblJWmNUHG1xNmBnICJAGNeg026CY3Glb4mve/ZGk2CQPLZIKZsRgKnL/SwxmplZ."
+
+  - name: avd
+    privilege: 15
+    role: network-admin
+    sha512_password: "$6$.iauIIDlN9IE5HD3$TX37BmbtLLWIyLIz41966D.gVxYawWdztQ6nCoKDrUFktfATe8jTH.e0R1U3EiBcYal8igbiGYSDX0DK1jZv70"
+  
+  - name: cvpadmin
+    privilege: 15
+    role: network-admin
+    sha512_password: "$6$.iauIIDlN9IE5HD3$TX37BmbtLLWIyLIz41966D.gVxYawWdztQ6nCoKDrUFktfATe8jTH.e0R1U3EiBcYal8igbiGYSDX0DK1jZv70"    
+
+  - name: arastra
+    privilege: 15
+    role: network-admin
+    sha512_password: "$6$.iauIIDlN9IE5HD3$TX37BmbtLLWIyLIz41966D.gVxYawWdztQ6nCoKDrUFktfATe8jTH.e0R1U3EiBcYal8igbiGYSDX0DK1jZv70"    
+
+# username ec2-user shell /bin/bash nopassword
+# username ec2-user ssh-key ssh-rsa ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCtIpP31DLuhacTzvq8BHKp2ElBVih+r6XhdsVNZ6nGortwPc6qb0+FPcQB/TJ7Dk4lF6v/zqHhZm6XmsbHxYbg4yGHTQahmzHxDY/9GW+SWAvDWMEJlBGnm1i0sKHa6DOAQPVEnzPabEV7QTC9w3YbcWa77vwPoT4vqa3x+wAJwcAl5wlQTREJBihif+UttDF2N+jwmT39+TbysCeqQbx0bWbRjZ1OH/fgJPlURC5R1CyyqTq4r3oZd9jKBgASzwZACpGxe8Xi1HyHeLbmhiNd3JPUfy4skPsGaiCVsQP6vWSEKtdufeAOR02zNCFsUbVZQZQudi5gbkJ4UJBZHQBI0xOFpA7ObeQBWCl3ovU+FesOiZDAp6FKKxYMxOPkdk4Vpt+pRLn2ExL7bxqOotoplMM8+bn2wo7P4WlJw8CPwlAC0ApmS8TtzoMvibjSEcLnaZICT9uv6IoqolWSc3EE5uSaLVed/SfK3QvWydYWXF62QoEoZ2lAzYN1QZF0xwE= root@buildkitsandbox
+# username gcp-user secret *
+# username gcp-user ssh-key ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDGPEoZ2l67eEEwrlGfBAHPMx44IoqhyfjqXj2Ka4PxLuHgi1mv131VuCRlyWjOjddccyFUilfR1Bprdmd1Tj7o4Q11YQ138LOqFWJT3h0pxgHFdIHo70y4rI8aL15ixukZYa+g9KX8qTN+ZpFfea2d3CEFzMp+Y3xVPiWwLKzalq1JwT5J4MK2VHCbcnpN3zRON+gca/iZH9upA0WaXWJXNBnYXrgXFVGCJFk6Yl1ZXIGnEcKGe44c77zWgF4C66VhltsW999XD5vF31f6TTs25qxGScsiKMDg2uM1AzVg5KfxxhVy5HKd23YJJMytvUXL9h5Wq1HEEluSCcFtNI81
+# username mircea secret *
+# username mircea ssh-key ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDw26o1dbfin+wgiYhiHybYebcYlS1EpucVdzfZASTkaMnCiaGy61mLtCaiZA82MEMNbkHLr9WgO2f9pHN2fiIiJc2gmlZPAUvSDzOHQapGuWzoPbeoKTaPyEzkDD5IzerV8wgMooaJOIWU9dWRjVPpUyj2GJ3JirC3HiLRnhkHFh3F+vUkEL81lMzJ/0HdnW3WrIjU6JnuOnpjiJ+np1OEPSbBdANT89tzaEm87QUioPQF7hHknKFUYK2Zqh5SXR6vQaLEcIhRqlAvZyjc95vDtYFWzqrdrHTdznyr8Hs/R2OeLmPGArGm6V8sGC9Q1bGfbhwjxvoWH9igUO6d82HKL2h8PJ1gXJU4XCb6Dkft7y0M4CDx6tIOo9jDxwFRtim9oC0uwxsRoXL4xCDYGH+jO4RAQSVxP6MQsJBEOvXez6whUev1lR91CiXmtUwQfzfmol03U8xMsBkdZ+Y4B7AkBUIpi/+8aEbMwRACyDZJB0+FzkYuWIYpiqoQ4pwUVw8=
+# username service shell /bin/bash secret sha512 $6$zWz4Ele/77jvxmfh$Kjm0LPSprqW1Cx1y6JdukCCPE50wdKqKKxJl6tF3sfm1qEo/qxMtXP0hydzrvvJ4fbHda8cexssFpCI4V6Awa.
+
+
+cvp_instance_ips: ["apiserver.cv-staging.corp.arista.io"]
+
+custom_structured_configuration_aliases: |
+  alias cc clear counters
+  alias senz show interface counter error | nz
+  alias shin show interface status
+  alias shmc show int | awk '/^[A-Z]/ { intf = $1 } /, address is/ { print intf, $6 }'
+  alias snz show interface counter | nz
+  alias spc show port-channel %1 detail all
+  alias sqnz show interface counter queue | nz
+  alias srnz show interface counter rate | n
+
+custom_structured_configuration_daemon_terminattr:
+  cvauth:
+    token_file: "/tmp/cv-onboarding-token"
+  disable_aaa: true
+
+custom_structured_configuration_system:
+  l1:
+    unsupported_speed_action: "error"
+    unsupported_error_correction_action: "error"
+
+custom_structured_configuration_ip_name_servers:
+  - ip_address: 169.254.169.254
+    vrf: default
+  - ip_address: 8.8.4.4
+    vrf: default
+    priority: 4
+  - ip_address: 8.8.8.8
+    vrf: default
+    priority: 4
+
+ntp_settings:
+  server_vrf: default
+  servers:
+    - name: 0.us.pool.ntp.org
+
+custom_structured_configuration_management_ssh:
+  client_alive:
+    interval: 180
+
+skipped_tests:
+  - category: AvdTestHardware
+    tests:
+      - VerifyEnvironmentPower
+      - VerifyEnvironmentCooling
+      - VerifyTemperature
+      - VerifyTransceiversManufacturers
+
+custom_structured_configuration_banners:
+  motd: "WAN PM-SE Demo srtcSmall. This setup is read-only access via CLI or CVaaS. Please contact raghukar@ with any questions\n \
+Note: Managed by CVaaS (cv-staging) \n"
